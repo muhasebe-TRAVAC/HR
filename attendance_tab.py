@@ -414,7 +414,12 @@ class AttendanceTab(QWidget):
             q += " AND a.employee_id = ?"
             params.append(emp_id)
 
-        q += " ORDER BY a.punch_date DESC, e.first_name"
+        # تطبيق فلتر الحالة المتقدم
+selected_statuses = self._get_selected_statuses()
+q = _apply_status_filter(q, params, selected_statuses)
+
+q += " ORDER BY a.punch_date DESC, e.first_name"
+
 
         data = self.db.fetch_all(q, params)
         self._draft_ids = [row[0] for row in data]
@@ -446,6 +451,17 @@ class AttendanceTab(QWidget):
         )
 
         self._update_work_days_label()
+    def _get_selected_statuses(self):
+        statuses = []
+        if self.chk_present.isChecked():
+            statuses.append("حاضر")
+        if self.chk_half_day.isChecked():
+            statuses.append("نصف يوم")
+        if self.chk_absent.isChecked():
+        statuses.append("غائب")
+        if self.chk_leave.isChecked():
+        statuses.append("إجازة")
+        return statuses
 
     def _warn_if_approved_overlap(self) -> None:
         d_from = self.draft_date_from.date().toString(Qt.ISODate)
