@@ -415,11 +415,10 @@ class AttendanceTab(QWidget):
             params.append(emp_id)
 
         # تطبيق فلتر الحالة المتقدم
-selected_statuses = self._get_selected_statuses()
-q = _apply_status_filter(q, params, selected_statuses)
+        selected_statuses = self._get_selected_statuses()
+        q = _apply_status_filter(q, params, selected_statuses)
 
-q += " ORDER BY a.punch_date DESC, e.first_name"
-
+        q += " ORDER BY a.punch_date DESC, e.first_name"
 
         data = self.db.fetch_all(q, params)
         self._draft_ids = [row[0] for row in data]
