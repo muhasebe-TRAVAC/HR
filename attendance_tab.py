@@ -450,6 +450,7 @@ class AttendanceTab(QWidget):
         )
 
         self._update_work_days_label()
+
     def _get_selected_statuses(self):
         statuses = []
         if self.chk_present.isChecked():
@@ -457,10 +458,11 @@ class AttendanceTab(QWidget):
         if self.chk_half_day.isChecked():
             statuses.append("نصف يوم")
         if self.chk_absent.isChecked():
-        statuses.append("غائب")
+            statuses.append("غائب")
         if self.chk_leave.isChecked():
-        statuses.append("إجازة")
+            statuses.append("إجازة")
         return statuses
+
 
     def _warn_if_approved_overlap(self) -> None:
         d_from = self.draft_date_from.date().toString(Qt.ISODate)
@@ -1991,7 +1993,6 @@ class BulkEditAttendanceDialog(QDialog):
                         ot_h   = max(0, diff - wh)
                     except Exception:
                         pass
-                if new_in:filter_row.addWidget(self.draft_status_filter)
                     try:
                         ai = datetime.strptime(f"{pdate} {new_in[:5]}", "%Y-%m-%d %H:%M")
                         ei = datetime.strptime(f"{pdate} {ws}",         "%Y-%m-%d %H:%M")
