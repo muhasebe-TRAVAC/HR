@@ -191,6 +191,21 @@ class AttendanceTab(QWidget):
         filter_row.addWidget(self.status_group)         
         lay.addLayout(filter_row)
 
+        # ربط إشارات فلتر الحالة (المسودة)
+        self.chk_all_status.stateChanged.connect(
+            self._on_draft_all_status_changed
+        )
+
+        for chk in (
+            self.chk_present,
+            self.chk_half_day,
+            self.chk_absent,
+            self.chk_leave
+        ):
+            chk.stateChanged.connect(
+                self._on_draft_single_status_changed
+            )
+
 
         # معلومات أيام العمل
         self.lbl_work_days = QLabel("أيام العمل في الفترة: 0")
