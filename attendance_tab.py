@@ -283,6 +283,43 @@ class AttendanceTab(QWidget):
         self.appr_emp_filter.completer().setFilterMode(Qt.MatchContains)
         filter_row.addWidget(QLabel("الموظف:"))
         filter_row.addWidget(self.appr_emp_filter)
+        # --- فلتر الحالة ---
+        self.appr_status_group = QGroupBox("الحالة")
+        status_layout = QVBoxLayout(self.appr_status_group)
+
+        self.appr_chk_all_status = QCheckBox("جميع الحالات")
+        self.appr_chk_present    = QCheckBox("حاضر")
+        self.appr_chk_half_day   = QCheckBox("نصف يوم")
+        self.appr_chk_absent     = QCheckBox("غائب")
+        self.appr_chk_leave      = QCheckBox("إجازة")
+
+        for chk in (
+            self.appr_chk_all_status,
+            self.appr_chk_present,
+            self.appr_chk_half_day,
+            self.appr_chk_absent,
+            self.appr_chk_leave
+        ):
+            chk.setChecked(True)
+            status_layout.addWidget(chk)
+
+        lay.addWidget(self.appr_status_group)
+
+        # ربط إشارات فلتر الحالة (المعتمدة)
+        self.appr_chk_all_status.stateChanged.connect(
+            self._on_appr_all_status_changed
+        )
+
+        for chk in (
+            self.appr_chk_present,
+            self.appr_chk_half_day,
+            self.appr_chk_absent,
+            self.appr_chk_leave
+        ):
+            chk.stateChanged.connect(
+                self._on_appr_single_status_changed
+            )
+
 
         filter_row.addWidget(btn("بحث", BTN_PRIMARY, self._load_approved))
         filter_row.addStretch()
@@ -450,6 +487,55 @@ class AttendanceTab(QWidget):
         )
 
         self._update_work_days_label()
+    def _on_draft_all_status_changed(self, state):
+        checked = state == Qt.Checked
+        for chk in (
+            self.chk_present,
+            self.chk_half_day,
+            self.chk_absent,
+            self.chk_leave
+        ):
+            chk.blockSignals(True)
+            chk.setChecked(checked)
+            chk.blockSignals(False)
+
+    def _on_draft_single_status_changed(self):
+        all_checked = all(
+            chk.isChecked() for chk in (
+                self.chk_present,
+                self.chk_half_day,
+                self.chk_absent,
+                self.chk_leave
+            )
+        )
+        self.chk_all_status.blockSignals(True)
+        self.chk_all_status.setChecked(all_checked)
+        self.chk_all_status.blockSignals(False)
+
+    def _on_appr_all_status_changed(self, state):
+        checked = state == Qt.Checked
+        for chk in (
+            self.appr_chk_present,
+            self.appr_chk_half_day,
+            self.appr_chk_absent,
+            self.appr_chk_leave
+        ):
+            chk.blockSignals(True)
+            chk.setChecked(checked)
+            chk.blockSignals(False)
+
+    def _on_appr_single_status_changed(self):
+        all_checked = all(
+            chk.isChecked() for chk in (
+                self.appr_chk_present,
+                self.appr_chk_half_day,
+                self.appr_chk_absent,
+                self.appr_chk_leave
+            )
+        )
+        self.appr_chk_all_status.blockSignals(True)
+        self.appr_chk_all_status.setChecked(all_checked)
+        self.appr_chk_all_status.blockSignals(False)
 
     def _get_selected_statuses(self):
         statuses = []
@@ -511,6 +597,10 @@ class AttendanceTab(QWidget):
         if emp_id is not None:
             q += " AND a.employee_id = ?"
             params.append(emp_id)
+        # تطبيق فلتر الحالة للمعتمد
+        selected_statuses = self._get_selected_approved_statuses()
+        q = _apply_status_filter(q, params, selected_statuses)
+
         q += " ORDER BY a.punch_date DESC, e.first_name"
 
         data = self.db.fetch_all(q, params)
@@ -526,6 +616,18 @@ class AttendanceTab(QWidget):
         self.lbl_hours_a.setText(f"الساعات: {hours:.1f}")
         self.lbl_ot_a.setText(f"أوفرتايم: {ot:.1f}")
         self.lbl_absent_a.setText(f"غياب: {absent}")
+
+    def _get_selected_approved_statuses(self):
+        statuses = []
+        if self.appr_chk_present.isChecked():
+            statuses.append("حاضر")
+        if self.appr_chk_half_day.isChecked():
+            statuses.append("نصف يوم")
+        if self.appr_chk_absent.isChecked():
+            statuses.append("غائب")
+        if self.appr_chk_leave.isChecked():
+            statuses.append("إجازة")
+        return statuses
 
     # ==================== اعتماد الفترة ====================
     def _approve_period(self):
