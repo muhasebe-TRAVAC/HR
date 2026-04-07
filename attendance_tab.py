@@ -172,6 +172,21 @@ class AttendanceTab(QWidget):
         self.chk_absent     = QCheckBox("غائب")
         self.chk_leave      = QCheckBox("إجازة")
 
+        # تحديث تلقائي عند تغيير أي فلتر (المسودة)
+        self.from_date.dateChanged.connect(self._refresh_current_tab)
+        self.to_date.dateChanged.connect(self._refresh_current_tab)
+        self.emp_cmb.currentIndexChanged.connect(self._refresh_current_tab)
+
+        for chk in (
+            self.chk_all_status,
+            self.chk_present,
+            self.chk_half_day,
+            self.chk_absent,
+            self.chk_leave
+        ):
+            chk.stateChanged.connect(self._refresh_current_tab)
+
+
         # الحالة الافتراضية: جميع الحالات محددة
         for chk in (
             self.chk_all_status,
@@ -307,6 +322,20 @@ class AttendanceTab(QWidget):
         self.appr_chk_half_day   = QCheckBox("نصف يوم")
         self.appr_chk_absent     = QCheckBox("غائب")
         self.appr_chk_leave      = QCheckBox("إجازة")
+        # تحديث تلقائي عند تغيير أي فلتر (المعتمدة)
+        self.appr_from_date.dateChanged.connect(self._refresh_current_tab)
+        self.appr_to_date.dateChanged.connect(self._refresh_current_tab)
+        self.appr_emp_cmb.currentIndexChanged.connect(self._refresh_current_tab)
+
+        for chk in (
+            self.appr_chk_all_status,
+            self.appr_chk_present,
+            self.appr_chk_half_day,
+            self.appr_chk_absent,
+            self.appr_chk_leave
+        ):
+            chk.stateChanged.connect(self._refresh_current_tab)
+
 
         for chk in (
             self.appr_chk_all_status,
@@ -631,6 +660,18 @@ class AttendanceTab(QWidget):
         self.lbl_hours_a.setText(f"الساعات: {hours:.1f}")
         self.lbl_ot_a.setText(f"أوفرتايم: {ot:.1f}")
         self.lbl_absent_a.setText(f"غياب: {absent}")
+
+    def _refresh_current_tab(self):
+        # منع التحديث أثناء البناء الأولي
+        if not hasattr(self, "inner_tabs"):
+            return
+
+        idx = self.inner_tabs.currentIndex()
+        if idx == 0:
+            self._load_draft()
+        elif idx == 1:
+            self._load_approved()
+
 
     def _get_selected_approved_statuses(self):
         statuses = []
