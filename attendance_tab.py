@@ -57,6 +57,7 @@ class AttendanceTab(QWidget):
         self.user = user
         self.comm = comm
         self._build()
+        self._update_work_settings()
         self._set_initial_dates()
         self._load_draft()
         self._load_approved()
@@ -171,11 +172,6 @@ class AttendanceTab(QWidget):
         self.chk_half_day   = QCheckBox("نصف يوم")
         self.chk_absent     = QCheckBox("غائب")
         self.chk_leave      = QCheckBox("إجازة")
-
-        # تحديث تلقائي عند تغيير أي فلتر (المسودة)
-        self.from_date.dateChanged.connect(self._refresh_current_tab)
-        self.to_date.dateChanged.connect(self._refresh_current_tab)
-        self.emp_cmb.currentIndexChanged.connect(self._refresh_current_tab)
 
         for chk in (
             self.chk_all_status,
@@ -323,9 +319,6 @@ class AttendanceTab(QWidget):
         self.appr_chk_absent     = QCheckBox("غائب")
         self.appr_chk_leave      = QCheckBox("إجازة")
         # تحديث تلقائي عند تغيير أي فلتر (المعتمدة)
-        self.appr_from_date.dateChanged.connect(self._refresh_current_tab)
-        self.appr_to_date.dateChanged.connect(self._refresh_current_tab)
-        self.appr_emp_cmb.currentIndexChanged.connect(self._refresh_current_tab)
 
         for chk in (
             self.appr_chk_all_status,
@@ -451,11 +444,15 @@ class AttendanceTab(QWidget):
                                     "لا توجد بيانات حضور في النظام بعد.")
 
     def _update_work_days_label(self):
+        if not hasattr(self, 'work_days_indices'):
+            return
+
         from_d = self.draft_date_from.date().toPyDate()
         to_d   = self.draft_date_to.date().toPyDate()
         count  = sum(
             1 for d in _date_range(from_d, to_d)
-            if d.weekday() in self.work_days_indices)
+            if d.weekday() in self.work_days_indices
+        )
         self.lbl_work_days.setText(f"أيام العمل في الفترة: {count}")
 
     # ==================== تحميل المسودة ====================
